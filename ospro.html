@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Guard | Secure OS Authentication</title>
+<!-- Google Fonts & Font Awesome for Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: radial-gradient(circle at 10% 20%, #0a0f1f, #03060f);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* animated bg elements */
+  body::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: repeating-linear-gradient(45deg, rgba(0, 255, 200, 0.02) 0px, rgba(0, 255, 200, 0.02) 2px, transparent 2px, transparent 8px);
+    animation: shiftBg 30s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes shiftBg {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(30px, 30px); }
+  }
+
+  /* glassmorphic card base */
+  .glass-card {
+    background: rgba(18, 25, 45, 0.75);
+    backdrop-filter: blur(12px);
+    border-radius: 32px;
+    border: 1px solid rgba(0, 255, 198, 0.25);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(0, 255, 198, 0.2) inset, 0 0 20px rgba(0, 255, 198, 0.2);
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-card:hover {
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 255, 198, 0.4) inset, 0 0 28px #00ffc633;
+  }
+
+  .container {
+    width: 380px;
+    padding: 32px 28px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  h2 {
+    font-weight: 600;
+    font-size: 1.9rem;
+    letter-spacing: -0.3px;
+    background: linear-gradient(135deg, #E0F2FE, #00ffc6);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  h2 i {
+    color: #00ffc6;
+    font-size: 1.8rem;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: #00ffc6;
+    text-shadow: 0 0 5px #00ffc6;
+  }
+
+  .sub {
+    font-size: 0.8rem;
+    color: #9aa8c9;
+    margin-bottom: 28px;
+    border-bottom: 1px dashed rgba(0, 255, 198, 0.3);
+    display: inline-block;
+    padding-bottom: 6px;
+  }
+
+  .input-group {
+    position: relative;
+    margin: 20px 0;
+  }
+
+  .input-group i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #5f7f9e;
+    font-size: 1rem;
+    transition: 0.2s;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px 14px 14px 42px;
+    background: rgba(10, 16, 28, 0.8);
+    border: 1px solid #2a3650;
+    border-radius: 60px;
+    font-size: 0.95rem;
+    color: #f0f3ff;
+    font-family: 'Inter', monospace;
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  input:focus {
+    border-color: #00ffc6;
+    box-shadow: 0 0 12px rgba(0, 255, 198, 0.4);
+    background: #0b1122;
+  }
+
+  input::placeholder {
+    color: #5b6f91;
+    font-weight: 400;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 60px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(30, 40, 60, 0.9);
+    color: white;
+    backdrop-filter: blur(4px);
+  }
+
+  .login-btn {
+    background: linear-gradient(95deg, #00a896, #02c39a);
+    box-shadow: 0 4px 12px rgba(0, 168, 150, 0.3);
+    color: white;
+    border: none;
+  }
+
+  .login-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 8px 18px rgba(0, 200, 170, 0.4);
+  }
+
+  .register-btn {
+    background: rgba(108, 92, 231, 0.85);
+    border: 1px solid #a29bfe;
+  }
+
+  .register-btn:hover {
+    background: #6c5ce7;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(108, 92, 231, 0.4);
+  }
+
+  .otp-btn {
+    background: linear-gradient(115deg, #1e2a5e, #0f1a3a);
+    border: 1px solid #00ffc6;
+    color: #00ffc6;
+  }
+
+  .otp-btn:hover {
+    background: #00ffc622;
+    color: #ffffff;
+    border-color: #fff;
+    box-shadow: 0 0 10px #00ffc6;
+  }
+
+  .secondary-btn {
+    background: rgba(20, 30, 55, 0.9);
+    border: 1px solid #3e4a6b;
+  }
+
+  .logout-btn {
+    background: #c44536cc;
+    border: none;
+    margin-top: 24px;
+  }
+
+  .logout-btn:hover {
+    background: #e05a4a;
+    transform: translateY(-2px);
+  }
+
+  #otp-section, #register-section {
+    margin-top: 18px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(0, 255, 198, 0.3);
+    animation: fadeSlide 0.3s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  #msg {
+    margin-top: 18px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 12px;
+    border-radius: 40px;
+    backdrop-filter: blur(4px);
+    text-align: center;
+  }
+
+  .dashboard-container {
+    width: 400px;
+    padding: 38px 30px;
+    text-align: center;
+  }
+
+  .user-badge {
+    background: rgba(0, 255, 198, 0.15);
+    border-radius: 60px;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    backdrop-filter: blur(4px);
+    border: 1px solid #00ffc655;
+  }
+
+  .user-badge i {
+    font-size: 1.8rem;
+  }
+
+  .role-tag {
+    background: #0e1a2f;
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #00ffc6;
+  }
+
+  .flex-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .flex-btns button {
+    margin: 0;
+  }
+
+  hr {
+    border-color: #2a3655;
+    margin: 12px 0;
+  }
+
+  i.fa, i.far, i.fas {
+    pointer-events: none;
+  }
+
+  .lock-icon {
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 480px) {
+    .container, .dashboard-container { width: 92%; padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MAIN AUTH CARD -->
+<div class="container glass-card" id="authCard">
+  <h2><i class="fas fa-shield-alt"></i> Nexus<span style="color:#00ffc6">Guard</span></h2>
+  <div class="sub">Zero-trust authentication</div>
+
+  <div class="input-group">
+    <i class="fas fa-user-astronaut"></i>
+    <input type="text" id="username" placeholder="Username / ID" autocomplete="off">
+  </div>
+  <div class="input-group">
+    <i class="fas fa-key"></i>
+    <input type="password" id="password" placeholder="Password">
+  </div>
+
+  <button class="login-btn" onclick="login()"><i class="fas fa-arrow-right-to-bracket"></i> Secure Login</button>
+  <button class="register-btn" onclick="showRegister()"><i class="fas fa-user-plus"></i> Create account</button>
+
+  <!-- OTP panel (hidden initially) -->
+  <div id="otp-section">
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input type="text" id="otp" placeholder="6-digit OTP" maxlength="6">
+    </div>
+    <button class="otp-btn" onclick="verifyOTP()"><i class="fas fa-check-circle"></i> Verify OTP</button>
+  </div>
+
+  <!-- Registration panel -->
+  <div id="register-section">
+    <h3 style="margin: 8px 0; font-size: 1.2rem; color:#b9c8ff;"><i class="fas fa-id-card"></i> Register</h3>
+    <div class="input-group">
+      <i class="fas fa-user"></i>
+      <input type="text" id="reg-user" placeholder="Choose username">
+    </div>
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="reg-pass" placeholder="Strong password">
+    </div>
+    <button class="register-btn" onclick="register()"><i class="fas fa-save"></i> Register & Secure</button>
+  </div>
+
+  <p id="msg"><i class="fas fa-info-circle"></i> Ready • AES-256 style</p>
+</div>
+
+<!-- DASHBOARD CARD (hidden at start) -->
+<div class="dashboard-container glass-card" id="dashboard" style="display: none;">
+  <h2><i class="fas fa-microchip"></i> Secure <span style="color:#00ffc6">Vault</span></h2>
+  <div class="user-badge">
+    <i class="fas fa-fingerprint"></i>
+    <span id="welcomeUser" style="font-weight: 600; font-size: 1.2rem;"></span>
+  </div>
+  <div id="roleBadge" class="role-tag" style="margin-bottom: 20px; display: inline-block;"></div>
+  <p style="margin: 16px 0; color: #b3ceff; font-size: 0.85rem;"><i class="fas fa-shield-haltered"></i> Session encrypted • MFA active</p>
+  <div class="flex-btns">
+    <button class="secondary-btn" onclick="refreshSession()" style="flex:1"><i class="fas fa-sync-alt"></i> Refresh token</button>
+    <button class="logout-btn" onclick="logout()" style="flex:1"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+  <p id="dashMsg" style="margin-top: 18px; font-size: 0.75rem; color: #6e8bb8;"></p>
+</div>
+
+<script>
+
+// ---------------- USER STORE ----------------
+let users = {
+  "admin": { password: "Admin@123", role: "Administrator • Root" },
+  "user": { password: "User@123", role: "Standard User" }
+};
+
+// ---------------- SECURITY TRACKER ----------------
+let userSecurity = {}; 
+/*
+Structure:
+{
+  username: {
+    attempts: number,
+    locked: boolean
+  }
+}
+*/
+
+let MAX_ATTEMPTS = 3;
+let generatedOTP = "";
+let currentUser = "";
+let sessionActive = false;
+
+// DOM
+const authCard = document.getElementById("authCard");
+const dashboardDiv = document.getElementById("dashboard");
+const msgBox = document.getElementById("msg");
+const otpSection = document.getElementById("otp-section");
+const regSection = document.getElementById("register-section");
+
+otpSection.style.display = "none";
+regSection.style.display = "none";
+
+// ---------------- MESSAGE ----------------
+function showMsg(text, color, isError = true) {
+  msgBox.innerHTML = text;
+  msgBox.style.color = color;
+}
+
+// ---------------- PASSWORD ----------------
+function checkPassword(password) {
+  let errors = [];
+  if (password.length < 8) errors.push("Min 8 chars");
+  if (!/[A-Z]/.test(password)) errors.push("Uppercase required");
+  if (!/[0-9]/.test(password)) errors.push("Number required");
+  if (!/[@#$%^&*!?]/.test(password)) errors.push("Special char required");
+  return errors;
+}
+
+// ---------------- GET USER STATE ----------------
+function getUserState(username) {
+  if (!userSecurity[username]) {
+    userSecurity[username] = { attempts: 0, locked: false };
+  }
+  return userSecurity[username];
+}
+
+// ---------------- LOGIN ----------------
+function login() {
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    showMsg("Enter all fields", "orange");
+    return;
+  }
+
+  let state = getUserState(username);
+
+  // 🔒 Check if THIS USER is locked
+  if (state.locked) {
+    showMsg(`🔒 ${username} is locked`, "red");
+    return;
+  }
+
+  let storedUser = users[username];
+
+  if (storedUser && storedUser.password === password) {
+
+    // reset attempts on success
+    state.attempts = 0;
+
+    let errors = checkPassword(password);
+    if (errors.length > 0) {
+      showMsg(errors.join(", "), "orange");
+      return;
+    }
+
+    currentUser = username;
+
+    generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    alert("OTP: " + generatedOTP);
+
+    otpSection.style.display = "block";
+    showMsg("Enter OTP", "lightgreen");
+
+  } else {
+    state.attempts++;
+
+    let remaining = MAX_ATTEMPTS - state.attempts;
+
+    if (state.attempts >= MAX_ATTEMPTS) {
+      state.locked = true;
+      showMsg(`🚫 ${username} is now LOCKED`, "red");
+    } else {
+      showMsg(`Wrong credentials (${remaining} left)`, "red");
+    }
+  }
+}
+
+// ---------------- OTP ----------------
+function verifyOTP() {
+  let otpValue = document.getElementById("otp").value;
+
+  if (otpValue === generatedOTP) {
+    sessionActive = true;
+
+    authCard.style.display = "none";
+    dashboardDiv.style.display = "block";
+
+    document.getElementById("welcomeUser").innerText = currentUser;
+    document.getElementById("roleBadge").innerText =
+      users[currentUser]?.role || "User";
+
+    showMsg("Login success", "lightgreen");
+
+  } else {
+    showMsg("Invalid OTP", "red");
+  }
+}
+
+// ---------------- REGISTER ----------------
+function showRegister() {
+  regSection.style.display = regSection.style.display === "none" ? "block" : "none";
+}
+
+// IMPORTANT: REGISTER WITH LOCK CHECK
+function register() {
+  let username = document.getElementById("reg-user").value.trim();
+  let password = document.getElementById("reg-pass").value;
+
+  if (!username || !password) {
+    showMsg("Fill all fields", "orange");
+    return;
+  }
+
+  let state = getUserState(username);
+
+  // 🔥 IMPORTANT RULE
+  if (state.locked) {
+    showMsg(`🚫 Cannot register. ${username} is LOCKED`, "red");
+    return;
+  }
+
+  if (users[username]) {
+    showMsg("User exists", "orange");
+    return;
+  }
+
+  let errors = checkPassword(password);
+  if (errors.length > 0) {
+    showMsg(errors.join(", "), "orange");
+    return;
+  }
+
+  users[username] = {
+    password: password,
+    role: "Standard User"
+  };
+
+  showMsg("User registered", "lightgreen");
+}
+
+// ---------------- LOGOUT ----------------
+function logout() {
+  location.reload();
+}
+
+</script>
+</body>
+</html>
